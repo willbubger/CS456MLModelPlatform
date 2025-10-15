@@ -1130,20 +1130,63 @@
         function prepareFeatures() {
             const features = [];
             const columns = Object.keys(dataset[0]).filter(col => col !== targetColumn);
-            
+            const encoders = {};
+
             dataset.forEach(row => {
                 const featureRow = columns.map(col => {
-                    const val = row[col];
-                    return typeof val === 'number' ? val : 0;
+                    let val = row[col];
+
+                    if (val === null || val === undefined || val === '') {
+                        return 0;
+                    }
+
+                    if (typeof val === 'boolean') {
+                        return val ? 1 : 0;
+                    }
+
+                    if (typeof val === 'string') {
+                        if (!encoders[col]) {
+                            encoders[col] = {};
+                        }
+                        if (!(val in encoders[col])) {
+                            encoders[col][val] = Object.keys(encoders[col]).length;
+                        }
+                        return encoders[col][val];
+                    }
+
+                    const numVal = Number(val);
+                    return Number.isFinite(numVal) ? numVal : 0;
                 });
                 features.push(featureRow);
             });
-            
+
             return normalize(features);
         }
 
         function prepareTarget() {
-            return dataset.map(row => row[targetColumn]);
+            const values = dataset.map(row => row[targetColumn]);
+            const cleanedValues = values.map(val => {
+                if (val === null || val === undefined || val === '') return null;
+                if (typeof val === 'boolean') return val ? 1 : 0;
+                if (typeof val === 'number') return val;
+                const numVal = Number(val);
+                return Number.isFinite(numVal) ? numVal : val;
+            });
+
+            if (cleanedValues.some(val => typeof val === 'string' || val === null)) {
+                const encoder = {};
+                let nextValue = 0;
+
+                return cleanedValues.map(val => {
+                    const key = val === null ? '__missing__' : val;
+                    if (!(key in encoder)) {
+                        encoder[key] = nextValue++;
+                    }
+                    return encoder[key];
+                });
+            }
+
+            return cleanedValues.map(val => (Number.isFinite(val) ? val : 0));
         }
 
         function isClassificationTask(y) {
@@ -1154,19 +1197,26 @@
         function normalize(data) {
             const normalized = [];
             const numFeatures = data[0].length;
-            
+
             for (let j = 0; j < numFeatures; j++) {
-                const column = data.map(row => row[j]);
+                const column = data.map(row => {
+                    const value = Number(row[j]);
+                    return Number.isFinite(value) ? value : 0;
+                });
                 const min = Math.min(...column);
                 const max = Math.max(...column);
-                const range = max - min || 1;
-                
+                const range = max - min;
+
                 for (let i = 0; i < data.length; i++) {
                     if (!normalized[i]) normalized[i] = [];
-                    normalized[i][j] = (data[i][j] - min) / range;
+                    if (!Number.isFinite(column[i]) || range === 0) {
+                        normalized[i][j] = 0;
+                    } else {
+                        normalized[i][j] = (column[i] - min) / range;
+                    }
                 }
             }
-            
+
             return normalized;
         }
 
@@ -1353,7 +1403,12 @@
             const yMean = yTrue.reduce((a, b) => a + b, 0) / n;
             const ssTot = yTrue.reduce((sum, val) => sum + Math.pow(val - yMean, 2), 0);
             const ssRes = yTrue.reduce((sum, val, i) => sum + Math.pow(val - yPred[i], 2), 0);
-            const r2 = 1 - (ssRes / ssTot);
+            let r2;
+            if (ssTot === 0) {
+                r2 = ssRes === 0 ? 1 : 0;
+            } else {
+                r2 = 1 - (ssRes / ssTot);
+            }
             
             const mae = yTrue.reduce((sum, val, i) => sum + Math.abs(val - yPred[i]), 0) / n;
 
