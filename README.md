@@ -30,7 +30,7 @@ This project is designed to run entirely client-side in a modern web browser. No
 3. From here, you can use "View Results" to see the model on the "Train Models" screen, or click "Delete" to remove the model from history
 ### Logging out
 1. Now, if you wish to log out, you can navigate to the "Logout" button in the rightmost upper corner.
-### Reproducing Our Reported Results
+## Reproducing Our Reported Results
 To reproduce our results exactly:
 1. Upload `classification_dataset_small.csv`
 2. Select `Label` as the target variable
