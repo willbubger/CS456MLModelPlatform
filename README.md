@@ -8,8 +8,8 @@ This project is designed to run entirely client-side in a modern web browser. No
 - **Browser:** Chrome, Edge, Firefox, or Safari (latest version recommended)
 - **Storage:** The platform uses the browser’s `localStorage` feature to save user accounts and training history. Clearing browser data will erase saved models.
 ### Running the Project
-1. Download the `CS456Project1` zip folder from Blackboard
-2. Open the folder and locate `CS456Project1.html`
+1. Download the `WebMLPlatformDeliverables` zip folder from Blackboard
+2. Open the folder and locate `CS456Project1.html` within the `WebML` folder
 3. Run the file in the browser of your choice
 ### Creating an Account
 1. Click Create account if you are new (If returning user, skip to step 7)
@@ -43,3 +43,9 @@ To reproduce our results exactly:
 	   - Accuracy ≈ 0.90
 	   - AUC ≈ 0.9631
 (Minor variations due to randomness are expected.)
+
+### Responsible AI & Data Handling
+- This app processes all data locally in your browser — nothing is uploaded or stored on external servers.  
+- Sample datasets are open-source and contain no personally identifiable information (PII).  
+- Users are responsible for ensuring that uploaded data complies with privacy and ethical standards.  
+- Results are for educational and experimental use only, not for real-world decision-making.
