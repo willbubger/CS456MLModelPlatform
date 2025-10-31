@@ -1,6 +1,8 @@
 # CS456MLModelPlatform
 A browser-based tool for uploading datasets, training machine learning models, and viewing evaluation metrics — all client-side with no installation required.
 
+**Live Repository:** [https://github.com/YourUsername/Web-ML-Platform](https://github.com/YourUsername/Web-ML-Platform)
+
 ## Using the ML Model Platform
 ### Environment Requirements
 This project is designed to run entirely client-side in a modern web browser. No installation, internet connection, or external dependencies are required.
@@ -46,6 +48,6 @@ To reproduce our results exactly:
 
 ### Responsible AI & Data Handling
 - This app processes all data locally in your browser — nothing is uploaded or stored on external servers.  
-- Sample datasets are open-source and contain no personally identifiable information (PII).  
+- Sample datasets are AI generated and contain no personally identifiable information (PII).  
 - Users are responsible for ensuring that uploaded data complies with privacy and ethical standards.  
 - Results are for educational and experimental use only, not for real-world decision-making.
