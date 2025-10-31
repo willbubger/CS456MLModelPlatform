@@ -657,6 +657,9 @@
                             <div class="model-card" data-model="randomforest" onclick="toggleModel(this)">
                                 Random Forest
                             </div>
+                            <div class="model-card" data-model="adaboost" onclick="toggleModel(this)">
+                                AdaBoost
+                            </div>
                             <div class="model-card" data-model="svm" onclick="toggleModel(this)">
                                 SVM
                             </div>
@@ -1177,6 +1180,9 @@
                         case 'randomforest':
                             result = await trainRandomForest(X, y, isClassification);
                             break;
+                        case 'adaboost':
+                            result = await trainAdaBoost(X, y, 10, isClassification);
+                            break;
                         case 'svm':
                             result = await trainSVM(X, y, isClassification);
                             break;
@@ -1202,6 +1208,7 @@
                 'logistic': 'Logistic Regression',
                 'decision': 'Decision Tree',
                 'randomforest': 'Random Forest',
+                'adaboost': 'AdaBoost',
                 'svm': 'SVM',
                 'nn': 'Neural Network'
             };
@@ -1285,56 +1292,49 @@
             return calculateRegressionMetrics(y, predictions, 'Linear Regression');
         }
 
-        async function trainLogisticRegression(X, y) {
-            const yBinary = y.map(val => val > 0 ? 1 : 0);
+        async function trainAdaBoost(X, y, nEstimators = 10) {
+            // Normalize features
             const n = X.length;
             const m = X[0].length;
-            let weights = new Array(m).fill(0);
-            let bias = 0;
-            const lr = 0.1;
-            const epochs = 1000;
+            const yMean = y.reduce((a,b)=>a+b,0)/n;
+            const yStd = Math.sqrt(y.reduce((a,b)=>a+Math.pow(b-yMean,2),0)/n) || 1;
+            const yScaled = y.map(v => (v - yMean) / yStd);
 
-            const sigmoid = z => 1 / (1 + Math.exp(-z));
+            // Initialize predictions and storage
+            let preds = Array(n).fill(0);
+            const lr = 0.3; // boosting shrinkage factor
 
-            for (let epoch = 0; epoch < epochs; epoch++) {
-                const predictions = X.map(x => {
-                    const z = x.reduce((sum, val, j) => sum + val * weights[j], bias);
-                    return sigmoid(z);
-                });
+            for (let est = 0; est < nEstimators; est++) {
+                // Compute residuals
+                const residuals = yScaled.map((v, i) => v - preds[i]);
 
-                const errors = predictions.map((pred, i) => pred - yBinary[i]);
-                
-                weights = weights.map((w, j) => {
-                    const gradient = errors.reduce((sum, err, i) => sum + err * X[i][j], 0) / n;
-                    return w - lr * gradient;
-                });
+                // Fit a super-simple weak model: linear regression on residuals
+                let weights = new Array(m).fill(0);
+                let bias = 0;
+                const innerLR = 0.001;
+                const epochs = 200;
 
-                bias -= lr * errors.reduce((a, b) => a + b, 0) / n;
+                for (let epoch = 0; epoch < epochs; epoch++) {
+                    const yhat = X.map(x => x.reduce((s,val,j)=>s+val*weights[j],bias));
+                    const errors = yhat.map((p,i)=>p - residuals[i]);
+                    weights = weights.map((w,j)=>{
+                        const grad = errors.reduce((s,e,i)=>s+e*X[i][j],0)/n;
+                        return w - innerLR * grad;
+                    });
+                    bias -= innerLR * errors.reduce((a,b)=>a+b,0)/n;
+                }
+
+                // Update predictions with scaled weak learner
+                const weakPreds = X.map(x => x.reduce((s,val,j)=>s+val*weights[j],bias));
+                preds = preds.map((p,i)=>p + lr * weakPreds[i]);
             }
 
-            const probabilities = X.map(x => {
-                const z = x.reduce((sum, val, j) => sum + val * weights[j], bias);
-                return sigmoid(z);
-            });
-            const predictions = probabilities.map(p => p > 0.5 ? 1 : 0);
-            
-            return calculateClassificationMetrics(yBinary, predictions, probabilities, 'Logistic Regression');
+            // Unscale
+            const yPred = preds.map(p => p * yStd + yMean);
+
+            return calculateRegressionMetrics(y, yPred, 'AdaBoost (Simplified)');
         }
 
-        async function trainDecisionTree(X, y, isClassification) {
-            const predictions = y.map(() => {
-                const mean = y.reduce((a, b) => a + b, 0) / y.length;
-                return isClassification ? Math.round(mean) : mean;
-            });
-
-            if (isClassification) {
-                const yBinary = y.map(val => val > 0 ? 1 : 0);
-                const predBinary = predictions.map(val => val > 0 ? 1 : 0);
-                return calculateClassificationMetrics(yBinary, predBinary, predictions.map(() => 0.5), 'Decision Tree');
-            } else {
-                return calculateRegressionMetrics(y, predictions, 'Decision Tree');
-            }
-        }
 
         async function trainRandomForest(X, y, isClassification) {
             const numTrees = 10;
