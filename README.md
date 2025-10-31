@@ -10,9 +10,14 @@ This project is designed to run entirely client-side in a modern web browser. No
 - **Browser:** Chrome, Edge, Firefox, or Safari (latest version recommended)
 - **Storage:** The platform uses the browser’s `localStorage` feature to save user accounts and training history. Clearing browser data will erase saved models.
 ### Running the Project
-1. Download the `WebMLPlatformDeliverables` zip folder from Blackboard
-2. Open the folder and locate `CS456Project1.html` within the `WebML` folder
+#### Running from Zip file
+1. Download the `WebMLPlatformDeliverables` zip folder from Blackboard or clone from Github repository
+2. Open the folder and locate `index.html` within the `WebML` folder
 3. Run the file in the browser of your choice
+#### Running with Docker
+1. Download the `WebMLPlatformDeliverables` zip folder from Blackboard or clone from Github repository
+2. cd to `WebMLPlatformDeliverables` and run `docker compose up`
+3. Open your browser to http://localhost:8080
 ### Creating an Account
 1. Click Create account if you are new (If returning user, skip to step 7)
 2. Enter your new username, and your new password, then confirm password
